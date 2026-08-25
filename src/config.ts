@@ -1,6 +1,6 @@
 // ========== 站点配置 ==========
 // 修改这里的密码来设置后台访问密码（建议使用 8 位以上混合字符）
-export const ADMIN_PASSWORD = 'thirdframe2026'
+export const ADMIN_PASSWORD = 'wjj20060929'
 
 // 站点名称
 export const SITE_NAME = 'Third Frame Co'
