@@ -2,30 +2,30 @@
   "materials": [
     {
       "id": "m_0001",
-      "title": "城市夜景车流 Sony A7C2 S-Log3",
+      "title": "Temple Bell Ringing Sony Rec.709",
       "type": "video",
-      "categoryPath": ["camera", "sony", "slog3"],
+      "categoryPath": ["camera", "sony", "rec709"],
       "resolution": "4K",
-      "framerate": 25,
+      "framerate": 30,
       "scene": "outdoor",
-      "duration": "00:42",
-      "quarkUrl": "https://pan.quark.cn/s/your-link-1",
+      "duration": "00:04",
+      "quarkUrl": "https://pan.quark.cn/s/b431bb3ae9b8?pwd=Cpqm",
       "baiduUrl": "",
       "coverFile": "m_0001_cover.jpg",
       "previewFile": "m_0001_preview.mp4",
-      "description": "上海外滩夜景车流素材，高光细节保留完整，暗部干净噪点低，非常适合练习夜景调色和动态范围压缩。拍摄时锁定白平衡 3200K，后期空间充足。",
-      "tags": ["城市", "夜景", "车流", "外滩"],
+      "description": "寺庙铃铛特写镜头。4K 30帧 Rec.709 直出拍摄，色彩还原自然真实，金属质感和光影过渡细腻。适合练习暖色调调色、金属反光处理和氛围感营造。无 Log，Rec.709 色彩空间，开箱即用。",
+      "tags": ["temple", "bell", "outdoor", "Rec.709", "Sony", "4K"],
       "camera": {
-        "model": "Sony A7C2",
-        "lens": "Sony 20-70mm F4 G OSS",
-        "aperture": "F4",
-        "shutter": "1/50s",
-        "iso": 800,
-        "whiteBalance": "3200K"
+        "model": "Sony",
+        "lens": "",
+        "aperture": "",
+        "shutter": "",
+        "iso": "",
+        "whiteBalance": ""
       },
-      "createdAt": "2026-08-01",
-      "downloads": 256,
-      "views": 1024,
+      "createdAt": "2026-08-26",
+      "downloads": 0,
+      "views": 0,
       "featured": true
     },
     {
@@ -204,7 +204,8 @@
           "children": [
             { "id": "slog3", "name": "S-Log3" },
             { "id": "slog2", "name": "S-Log2" },
-            { "id": "hlg", "name": "HLG" }
+            { "id": "hlg", "name": "HLG" },
+            { "id": "rec709", "name": "Rec.709" }
           ]
         },
         {
