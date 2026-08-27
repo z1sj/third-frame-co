@@ -12,3 +12,6 @@ export const PAGE_SIZE = 12
 
 // 首页精选展示数量
 export const FEATURED_LIMIT = 8
+
+// GitHub 仓库配置（用于后台一键部署）
+export const GITHUB_REPO = 'z1sj/third-frame-co'
