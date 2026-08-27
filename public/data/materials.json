@@ -2,7 +2,7 @@
   "materials": [
     {
       "id": "m_0001",
-      "title": "Temple Bell Ringing Sony Rec.709",
+      "title": "寺庙铃铛",
       "type": "video",
       "categoryPath": ["camera", "sony", "rec709"],
       "resolution": "4K",
