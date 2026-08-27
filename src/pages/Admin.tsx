@@ -3,10 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Lock, Unlock, Package, FolderTree, Download, Upload, Trash2, Plus, Save,
   Edit3, X, ChevronDown, ChevronRight, Search, AlertTriangle, CheckCircle, FileJson,
-  Camera, Image as ImageIcon, GripVertical, RotateCcw, Eye, Play,
+  Camera, Image as ImageIcon, GripVertical, RotateCcw, Eye, Play, Rocket, Loader2, Key,
 } from 'lucide-react'
 import { useData } from '../contexts/DataContext'
 import { ADMIN_PASSWORD, SITE_NAME } from '../config'
+import { getToken, setToken, clearToken, uploadJSON, uploadBinaryFile } from '../utils/github'
 import type { Material, Category, AppData, MaterialType, SceneType, CameraParams } from '../types'
 
 type Tab = 'materials' | 'categories' | 'export'
@@ -410,6 +411,49 @@ function MaterialEditor({ draft, material, onClose, onSave }: {
 }) {
   const [form, setForm] = useState<Material>(material)
   const [tagInput, setTagInput] = useState('')
+  const [uploadingCover, setUploadingCover] = useState(false)
+  const [uploadingPreview, setUploadingPreview] = useState(false)
+  const [uploadMsg, setUploadMsg] = useState('')
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    if (!getToken()) { setUploadMsg('请先在「导入/导出」页面设置 GitHub Token'); return }
+    setUploadingCover(true)
+    setUploadMsg('正在上传封面图...')
+    const ext = file.name.split('.').pop() || 'jpg'
+    const filename = `${form.id}_cover.${ext}`
+    const result = await uploadBinaryFile(`public/covers/${filename}`, file, `upload: 封面图 ${filename}`, (m) => setUploadMsg(m))
+    setUploadingCover(false)
+    if (result.ok) {
+      update('coverFile', filename)
+      setUploadMsg('✅ 封面图上传成功！部署后即可在网站查看')
+      setTimeout(() => setUploadMsg(''), 4000)
+    } else {
+      setUploadMsg(`❌ 上传失败：${result.error}`)
+    }
+  }
+
+  const handlePreviewUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    if (!getToken()) { setUploadMsg('请先在「导入/导出」页面设置 GitHub Token'); return }
+    setUploadingPreview(true)
+    setUploadMsg('正在上传预览视频...')
+    const ext = file.name.split('.').pop() || 'mp4'
+    const filename = `${form.id}_preview.${ext}`
+    const result = await uploadBinaryFile(`public/previews/${filename}`, file, `upload: 预览视频 ${filename}`, (m) => setUploadMsg(m))
+    setUploadingPreview(false)
+    if (result.ok) {
+      update('previewFile', filename)
+      setUploadMsg('✅ 预览视频上传成功！部署后即可在网站播放')
+      setTimeout(() => setUploadMsg(''), 4000)
+    } else {
+      setUploadMsg(`❌ 上传失败：${result.error}`)
+    }
+  }
 
   const update = <K extends keyof Material>(key: K, val: Material[K]) =>
     setForm(f => ({ ...f, [key]: val }))
@@ -558,20 +602,46 @@ function MaterialEditor({ draft, material, onClose, onSave }: {
 
           {/* 预览文件 */}
           <Section title="文件命名（预览图/视频）">
+            {uploadMsg && (
+              <div className={`text-xs mb-3 px-3 py-2 rounded-xsm ${
+                uploadMsg.includes('失败') || uploadMsg.includes('Token')
+                  ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'
+                  : 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400'
+              }`}>
+                {uploadMsg}
+              </div>
+            )}
             <div className="grid md:grid-cols-2 gap-4">
               <Field label="封面文件名 (public/covers/ 下放同名文件)">
-                <input className="pill-input !text-sm" value={form.coverFile}
-                  onChange={(e) => update('coverFile', e.target.value)}
-                  placeholder="m_0001_cover.jpg" />
+                <div className="flex gap-2">
+                  <input className="pill-input !text-sm flex-1" value={form.coverFile}
+                    onChange={(e) => update('coverFile', e.target.value)}
+                    placeholder="m_0001_cover.jpg" />
+                  <label className={`btn-secondary !py-2.5 !px-3 !text-sm whitespace-nowrap cursor-pointer ${uploadingCover ? 'opacity-50 pointer-events-none' : ''}`}>
+                    {uploadingCover ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                    <span className="ml-1">上传封面</span>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} disabled={uploadingCover} />
+                  </label>
+                </div>
               </Field>
               {form.type === 'video' && (
                 <Field label="预览视频文件名 (public/previews/)">
-                  <input className="pill-input !text-sm" value={form.previewFile || ''}
-                    onChange={(e) => update('previewFile', e.target.value)}
-                    placeholder="m_0001_preview.mp4" />
+                  <div className="flex gap-2">
+                    <input className="pill-input !text-sm flex-1" value={form.previewFile || ''}
+                      onChange={(e) => update('previewFile', e.target.value)}
+                      placeholder="m_0001_preview.mp4" />
+                    <label className={`btn-secondary !py-2.5 !px-3 !text-sm whitespace-nowrap cursor-pointer ${uploadingPreview ? 'opacity-50 pointer-events-none' : ''}`}>
+                      {uploadingPreview ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                      <span className="ml-1">上传视频</span>
+                      <input type="file" accept="video/*" className="hidden" onChange={handlePreviewUpload} disabled={uploadingPreview} />
+                    </label>
+                  </div>
                 </Field>
               )}
             </div>
+            <p className="text-[11px] text-apple-text-tertiary mt-2">
+              点击上传按钮可直接选择文件上传到 GitHub，文件名会自动填写。需先在「导入/导出」页设置 Token。
+            </p>
           </Section>
 
           {/* 描述 */}
@@ -955,6 +1025,36 @@ function ExportPanel({ draft, onExport, onImport, onToast }: {
 
   const [dragOver, setDragOver] = useState(false)
 
+  // GitHub 部署
+  const [tokenInput, setTokenInput] = useState(() => getToken() || '')
+  const [deploying, setDeploying] = useState(false)
+  const [deployStatus, setDeployStatus] = useState('')
+
+  const handleDeploy = async () => {
+    if (!getToken()) { onToast('err', '请先填写并保存 GitHub Token'); return }
+    setDeploying(true)
+    setDeployStatus('正在上传 materials.json...')
+    const json = onExport()
+    const result = await uploadJSON(
+      'public/data/materials.json',
+      json,
+      `deploy: 更新素材数据 ${new Date().toLocaleString('zh-CN')}`,
+      (msg) => setDeployStatus(msg)
+    )
+    setDeploying(false)
+    if (result.ok) {
+      setDeployStatus('')
+      onToast('ok', '部署成功！1-2 分钟后网站自动更新')
+    } else {
+      onToast('err', result.error || '部署失败')
+    }
+  }
+
+  const saveToken = () => {
+    if (tokenInput.trim()) { setToken(tokenInput.trim()); onToast('ok', 'Token 已保存') }
+    else { clearToken(); onToast('ok', 'Token 已清除') }
+  }
+
   const readFile = (file: File) => {
     const reader = new FileReader()
     reader.onload = () => {
@@ -1053,6 +1153,61 @@ function ExportPanel({ draft, onExport, onImport, onToast }: {
           <p className="mt-3 text-apple-text-tertiary text-xs leading-6">
             压缩建议：封面 JPG 长边 1920px，质量 80；预览视频建议压缩到 720P / 1-3 Mbps，时长和原片一致或剪 5-10 秒短预览。
           </p>
+        </div>
+      </div>
+
+      {/* GitHub 一键部署 */}
+      <div className="glass-panel rounded-lg p-6">
+        <h2 className="text-lg font-semibold text-apple-text mb-2 flex items-center gap-2">
+          <Rocket size={18} /> 一键部署到网站
+        </h2>
+        <p className="text-sm text-apple-text-secondary mb-5 leading-relaxed">
+          填写 GitHub Token 后，点击部署即可将当前素材数据直接上传到 GitHub，触发自动构建。<br />
+          <strong>无需手动导出 JSON、无需终端操作</strong>，1-2 分钟后网站自动更新。
+        </p>
+
+        {/* Token 设置 */}
+        <div className="mb-5">
+          <label className="block text-xs text-apple-text-tertiary mb-1.5">
+            <Key size={11} className="inline mr-1" /> GitHub Personal Access Token
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="password"
+              value={tokenInput}
+              onChange={(e) => setTokenInput(e.target.value)}
+              placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+              className="pill-input !text-sm flex-1"
+            />
+            <button onClick={saveToken} className="btn-secondary !py-2.5 !px-4 !text-sm whitespace-nowrap">
+              保存 Token
+            </button>
+          </div>
+          <p className="text-[11px] text-apple-text-tertiary mt-2">
+            Token 仅保存在本机浏览器中，不会上传到任何服务器。
+            <a href="https://github.com/settings/tokens/new?scopes=repo,workflow&description=Third+Frame+Deploy"
+              target="_blank" rel="noreferrer" className="text-apple-accent hover:underline ml-1">
+              点击生成新 Token
+            </a>
+          </p>
+        </div>
+
+        {/* 部署按钮 */}
+        <button
+          onClick={handleDeploy}
+          disabled={deploying || !getToken()}
+          className={`btn-primary ${(!getToken() || deploying) ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          {deploying ? (
+            <><Loader2 size={16} className="animate-spin" /> {deployStatus || '部署中...'}</>
+          ) : (
+            <><Rocket size={16} /> 部署到网站</>
+          )}
+        </button>
+
+        <div className="mt-4 text-xs text-apple-text-tertiary">
+          <p>当前数据：{draft.materials.length} 素材 · {countCategories(draft.categories)} 分类</p>
+          <p>仓库：z1sj/third-frame-co · 部署后 GitHub Actions 会自动构建</p>
         </div>
       </div>
     </motion.section>
